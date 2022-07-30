@@ -4,10 +4,17 @@ import styles from '../styles/Home.module.css'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import {supabase} from '../utils/db'
+import { useRouter } from 'next/router'
 export default function Home() {
+  const router = useRouter()
+
+
+
 
 const [posts, setPosts] = useState([])
 const [post, setPost] = useState({title: '', content: ''})
+const user = supabase.auth.user();
+console.log("user", user);
 
 useEffect(() => {
  getPosts()
@@ -15,6 +22,12 @@ useEffect(() => {
 
 
 }, [])
+
+
+// find previous router tht come from
+// https://stackoverflow.com/questions/52709841/how-to-get-the-previous-route-in-nextjs
+
+
 
 async function getPosts() {
 

@@ -1,3 +1,4 @@
+import { data } from "autoprefixer";
 import React from "react";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -9,131 +10,130 @@ const Posts = () => {
   const user = supabase.auth.user();
   console.log("Auth ----------->", user);
 
+  useEffect(() => {
+    const userdata = localStorage.getItem("useris");
 
-
-
-
-useEffect(() => {
-
-    const userdata = localStorage.getItem('useris')
-  
-    setUserdata(JSON.parse(userdata))
- // JSON.parse(userdata)
-   
-  
-  
+    setUserdata(JSON.parse(userdata));
+    // JSON.parse(userdata)
   }, []);
-  
-
-
-
 
   //console.log(supabase?.auth()?.user);
   async function handleSubmit(e) {
-    console.log('🛹🛹🛹🛹', userdata?.id)
+    console.log("🛹🛹🛹🛹", userdata?.id);
     e.preventDefault();
-    const {data ,error} = await supabase
-      .from("posts")
-      .insert(
-        { title: post.title, content: post.content ,profile_id: supabase.auth.user()?.id },
-      )
-    
+    // const {data ,error} = await supabase
+    //   .from("posts")
+    //   .insert(
+    //     { title: post.title, content: post.content ,profile_id: supabase.auth.user()?.id },
+    //   )
 
-        console.log("inserted",data);
-      await  getPosts();
-    
-    
-      if ( error)   console.log("err", error);
-     
+    const { data, error } = await supabase
+      .from("arrayposts")
+      .insert({
+        textarray: ["post1", "post2"],
+        object: { name: "maher", age: 18 },
+      });
+
+    console.log("inserted", data);
+    await getPosts();
+
+    if (error) console.log("err", error);
   }
 
-
-
-
-
-// fetch All posts
-    async function getPosts() {
-
-      await supabase.from("posts").select("*, profile_id (first_name,last_name)").eq("profile_id", user?.id).
-      then((data) => {
+  // fetch All posts
+  async function getPosts() {
+    // await supabase.from("posts").select("*, profile_id (first_name,last_name)").eq("profile_id", user?.id).
+    await supabase
+      .from("arrayposts")
+      .select("*")
+      .then((data) => {
         console.log("data", data);
         setPosts(data.data);
         console.log("posts🌙🌙🌙------>", posts);
-      })
+      });
+  }
 
-    }
+  useEffect(() => {
+    getPosts();
+  }, []);
 
+  // upsaer messages
 
-    useEffect(() => {
+  const sendMessages = async (e) => {
+    const { data, error } = await supabase.from("messages").upsert([
+      { id: 5, message: "kaka", username: "supabot" },
+      { id: 6, message: "ronaldo", username: "supabot" },
+    ]);
+  };
 
-        getPosts();
+  // find where
 
-    }, []);
-
-
-
-    // upsaer messages
-
-    const sendMessages = async (e) => {
-
-        const { data, error } = await supabase
-        .from('messages')
-        .upsert([
-        { id: 5, message: 'kaka', username: 'supabot' },
-        { id: 6, message: 'ronaldo', username: 'supabot' }
-        ])
-
-    }
-
-
-
-// find where
-
-const Searchtext = async (e) => {
-const textis = 'ro'
+  const Searchtext = async (e) => {
+    const textis = "ro";
 
     const { data, error } = await supabase
-    .from('messages')
-    .select()
-  .like('message', `%${textis}%`)
+      .from("messages")
+      .select()
+      .like("message", `%${textis}%`);
 
     console.log("data", data);
+  };
+
+  const SearhOR = async (e) => {
+    const textis2 = "ronaldo";
+    const textis1 = "kaka";
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select()
+      .or(`message.eq.${textis1}`, `message.eq.${textis2}`);
+
+    console.log("data", data);
+  };
+
+  // delete post where id = 1
+
+  async function deletePost() {
+    await supabase
+      .from("posts")
+      .delete({ id: 2 })
+      .match({ title: "post Title two" })
+      // .eq("id", 1)
+      .then((data) => {
+        console.log(" post deleted");
+        getPosts();
+      });
+  }
+
+
+//   increment like nu,ber wher id === 1
+
+  async function incrementLike() {
+
+ const  {data,error}  = await supabase.from('likes').select().eq('id',1).single()
+ console.log("data",data);
+
+// update likes number
+const { data:updatedata, error:errorupdate } = await supabase.from('likes').update({
+  likesNumber: data.likesNumber + 1
+}).eq('id',1).single()
+
+if (updatedata?.likesNumber == 11) {
+
+  const { data:updatedata, error:errorupdate } = await supabase.from('likes').update({
+    likesNumber: data.likesNumber  - 2
+  }).eq('id',1).single()
+
+  console.log("DDDDDDDDDDDD",updatedata);
 
 
 }
 
-const SearhOR = async (e) => {
-    const textis2 = 'ronaldo'
-    const textis1 = 'kaka'
-    
-        const { data, error } = await supabase
-        .from('messages')
-        .select()
-        .or(`message.eq.${textis1}`, `message.eq.${textis2}`)
-    
-        console.log("data", data);
-    
-    
-    }
-    
 
 
+console.log("updatedata",updatedata);
 
-
-
-// delete post where id = 1
-
-    async function deletePost() {
-
-        await supabase.from("posts").delete({ id: 2  }).match({ title : "post Title two"})  
-       // .eq("id", 1)
-        .then((data) => {
-            console.log(" post deleted");
-            getPosts();
-        })
-    
-
-    }
+  }
 
 
 
@@ -174,7 +174,6 @@ const SearhOR = async (e) => {
           send post
         </button>
 
-
         <button
           className=" bg-red-600 text-white text-center p-2 inline-block w-[200px] mx-auto my-4 mx-2 rounded-full "
           onClick={deletePost}
@@ -182,65 +181,63 @@ const SearhOR = async (e) => {
           {" "}
           Delete post
         </button>
-
-
       </div>
 
-<div>
+      <div>
+        <button
+          className=" bg-red-600 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
+          onClick={sendMessages}
+        >
+          Send Messages
+        </button>
+      </div>
 
-    <button
-     className=" bg-red-600 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
-    onClick={sendMessages}
-    >
-        Send Messages
-    </button>
-</div>
+      <div>
+        <button
+          className=" bg-red-600 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
+          onClick={Searchtext}
+        >
+          Search Text
+        </button>
+      </div>
 
-
-
-
-<div>
-
-    <button
-     className=" bg-red-600 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
-    onClick={Searchtext}
-    >
-        Search Text
-    </button>
-</div>
-
-<div>
-
-    <button
-     className="  bg-fuchsia-400 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
-    onClick={SearhOR}
-    >
-        Search With Or
-    </button>
-</div>
+      <div>
+        <button
+          className="  bg-fuchsia-400 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
+          onClick={SearhOR}
+        >
+          Search With Or
+        </button>
+      </div>
 
 
-
-
-
-
-<div>
-
-{posts?.map((post) => (
-
-<div>
-    <p>{post?.profile_id?.first_name}</p>
-    <p></p>
-</div>
-))}
-
-
-
-</div>
+      <div>
+        <button
+          className="  bg-fuchsia-400 text-white text-center p-2 inline-block w-[200px] my-4 mx-2 "
+          onClick={incrementLike}
+        >
+             incrementLike
+        </button>
+      </div>
 
 
 
 
+
+      <div>
+        {posts?.map((post) => (
+          <div>
+            <p>
+              {post?.textarray.map((text) => (
+                <div>
+                  <p>{text}</p>
+                </div>
+              ))}
+            </p>
+            <p>{post?.object?.age}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
